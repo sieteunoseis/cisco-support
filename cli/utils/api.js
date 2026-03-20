@@ -7,7 +7,7 @@ const API_BASE_URLS = {
   eox: "https://apix.cisco.com/supporttools/eox/rest/5",
   psirt: "https://apix.cisco.com/security/advisories/v2",
   product: "https://apix.cisco.com/product/v1",
-  software: "https://apix.cisco.com/software/v4",
+  software: "https://apix.cisco.com/software/suggestion/v2",
   serial: "https://apix.cisco.com/sn2info/v2",
   rma: "https://apix.cisco.com/return/v1.0",
 };

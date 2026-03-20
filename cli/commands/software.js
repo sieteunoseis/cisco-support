@@ -92,4 +92,20 @@ module.exports = function (program) {
         if (globalOpts.audit !== false) logOperation({ command: "software compare", pid: opts.pid, from: opts.from, to: opts.to });
       } catch (err) { printError(err); }
     });
+
+  software
+    .command("compatible")
+    .description("Get compatible software for a product ID")
+    .requiredOption("--pid <pid>", "product ID")
+    .action(async (opts, command) => {
+      try {
+        const globalOpts = command.optsWithGlobals();
+        const config = loadConfig();
+        const data = await apiGet("software", `/suggestions/compatible/productId/${encodeURIComponent(opts.pid)}`, {}, config);
+        const rawList = data.productList || data.suggestions || [];
+        const suggestions = flattenProductList(Array.isArray(rawList) ? rawList : [rawList]);
+        if (globalOpts.audit !== false) logOperation({ command: "software compatible", pid: opts.pid });
+        await printResult(pickColumns(suggestions), globalOpts.format);
+      } catch (err) { printError(err); }
+    });
 };
