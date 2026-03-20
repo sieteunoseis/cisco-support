@@ -23,7 +23,7 @@ module.exports = function (program) {
         const globalOpts = command.optsWithGlobals();
         const config = loadConfig();
         const data = await apiGet("rma", `/returns/rma_numbers/${encodeURIComponent(rmaNumber)}`, {}, config);
-        const returns = data.returns || (Array.isArray(data) ? data : [data]);
+        const returns = data.returns || data.rma_records || (Array.isArray(data) ? data : [data]);
         if (globalOpts.audit !== false) logOperation({ command: "rma get", rmaNumber });
         await printResult(pickColumns(returns), globalOpts.format);
       } catch (err) { printError(err); }
@@ -47,7 +47,7 @@ module.exports = function (program) {
           return;
         }
 
-        const returns = data.returns || (Array.isArray(data) ? data : [data]);
+        const returns = data.returns || data.rma_records || (Array.isArray(data) ? data : [data]);
         if (globalOpts.audit !== false) logOperation({ command: "rma", user: opts.user, serial: opts.serial });
         await printResult(pickColumns(returns), globalOpts.format);
       } catch (err) { printError(err); }

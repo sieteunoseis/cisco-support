@@ -24,11 +24,12 @@ function filterBugs(bugs, opts) {
 
 function pickColumns(bugs) {
   return bugs.map((b) => ({
-    bugId: b.bugId || b.bug_id,
+    bugId: b.bug_id || b.bugId,
     severity: b.severity,
     status: b.status,
     headline: b.headline,
-    lastModified: b.lastModifiedDate || b.lastModified,
+    product: b.product,
+    lastModified: b.last_modified_date || b.lastModifiedDate || b.lastModified,
   }));
 }
 
@@ -67,7 +68,10 @@ module.exports = function (program) {
       try {
         const globalOpts = command.optsWithGlobals();
         const config = loadConfig();
-        const params = { pageIndex: opts.page, numOfResults: opts.pageSize };
+        const params = { page_index: opts.page };
+        if (opts.severity) params.severity = opts.severity;
+        if (opts.status) params.status = opts.status;
+        if (opts.modifiedAfter) params.modified_date = opts.modifiedAfter;
         let data;
 
         if (opts.progressive) {

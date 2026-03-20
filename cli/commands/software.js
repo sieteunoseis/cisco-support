@@ -3,8 +3,23 @@ const { apiGet } = require("../utils/api.js");
 const { printResult, printError } = require("../utils/output.js");
 const { logOperation } = require("../utils/audit.js");
 
+function flattenProductList(productList) {
+  const results = [];
+  for (const product of productList) {
+    const suggestions = product.suggestions || [];
+    for (const s of suggestions) {
+      results.push({ ...s, productId: product.id || product.product });
+    }
+    if (suggestions.length === 0) {
+      results.push(product);
+    }
+  }
+  return results;
+}
+
 function pickColumns(releases) {
   return releases.map((r) => ({
+    productId: r.productId || r.id || r.product,
     version: r.imageName || r.releaseFormat1 || r.releaseDisplayName || r.version,
     releaseDate: r.releaseDate,
     majorRelease: r.majorRelease || r.releaseTrain,
@@ -25,9 +40,10 @@ module.exports = function (program) {
         const config = loadConfig();
         const pids = opts.pid.split(",").map((s) => s.trim()).join(",");
         const data = await apiGet("software", `/suggestions/software/productIds/${pids}`, {}, config);
-        const suggestions = data.productList || data.suggestions || [];
+        const rawList = data.productList || data.suggestions || [];
+        const suggestions = flattenProductList(Array.isArray(rawList) ? rawList : [rawList]);
         if (globalOpts.audit !== false) logOperation({ command: "software suggest", pids });
-        await printResult(pickColumns(Array.isArray(suggestions) ? suggestions : [suggestions]), globalOpts.format);
+        await printResult(pickColumns(suggestions), globalOpts.format);
       } catch (err) { printError(err); }
     });
 
@@ -40,9 +56,10 @@ module.exports = function (program) {
         const globalOpts = command.optsWithGlobals();
         const config = loadConfig();
         const data = await apiGet("software", `/suggestions/releases/productIds/${encodeURIComponent(opts.pid)}`, {}, config);
-        const releases = data.productList || data.releases || [];
+        const rawList = data.productList || data.releases || [];
+        const releases = flattenProductList(Array.isArray(rawList) ? rawList : [rawList]);
         if (globalOpts.audit !== false) logOperation({ command: "software releases", pid: opts.pid });
-        await printResult(pickColumns(Array.isArray(releases) ? releases : [releases]), globalOpts.format);
+        await printResult(pickColumns(releases), globalOpts.format);
       } catch (err) { printError(err); }
     });
 
@@ -61,14 +78,16 @@ module.exports = function (program) {
           apiGet("software", `/suggestions/software/productIds/${encodeURIComponent(opts.pid)}`, { currentImage: opts.to }, config),
         ]);
 
-        const fromSuggestions = fromData.productList || fromData.suggestions || [];
-        const toSuggestions = toData.productList || toData.suggestions || [];
+        const fromRaw = fromData.productList || fromData.suggestions || [];
+        const toRaw = toData.productList || toData.suggestions || [];
+        const fromSuggestions = flattenProductList(Array.isArray(fromRaw) ? fromRaw : [fromRaw]);
+        const toSuggestions = flattenProductList(Array.isArray(toRaw) ? toRaw : [toRaw]);
 
         console.log(`\n  Suggestions from version: ${opts.from}`);
-        await printResult(pickColumns(Array.isArray(fromSuggestions) ? fromSuggestions : [fromSuggestions]), globalOpts.format);
+        await printResult(pickColumns(fromSuggestions), globalOpts.format);
 
         console.log(`\n  Suggestions from version: ${opts.to}`);
-        await printResult(pickColumns(Array.isArray(toSuggestions) ? toSuggestions : [toSuggestions]), globalOpts.format);
+        await printResult(pickColumns(toSuggestions), globalOpts.format);
 
         if (globalOpts.audit !== false) logOperation({ command: "software compare", pid: opts.pid, from: opts.from, to: opts.to });
       } catch (err) { printError(err); }

@@ -6,8 +6,8 @@ const { logOperation } = require("../utils/audit.js");
 function pickCoverageColumns(records) {
   return records.map((r) => ({
     serialNumber: r.sr_no || r.serialNumber,
-    coverageStatus: r.is_covered || r.coverageStatus,
-    contractNumber: r.contract_site_customer_name || r.contractNumber,
+    coverageStatus: r.coverage_status || r.is_covered || r.coverageStatus,
+    contractNumber: r.contract_number || r.contractNumber,
     serviceLineDescr: r.service_line_descr || r.serviceLineDescr,
   }));
 }

@@ -5,10 +5,11 @@ const { logOperation } = require("../utils/audit.js");
 
 function pickColumns(products) {
   return products.map((p) => ({
-    pid: p.orderable_pid || p.base_pid || p.id,
+    pid: p.product_id || p.orderable_pid || p.base_pid || p.id,
     productName: p.product_name || p.productName,
     productCategory: p.product_category || p.productCategory,
     productType: p.product_type || p.productType,
+    productSeries: p.product_series || p.productSeries,
   }));
 }
 

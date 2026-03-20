@@ -8,7 +8,7 @@ function pickColumns(records) {
     pid: r.EOLProductID || r.pid,
     description: r.ProductIDDescription || r.description,
     endOfSaleDate: r.EndOfSaleDate?.value || r.endOfSaleDate,
-    endOfSupportDate: r.EndOfSWMaintenanceReleasesDate?.value || r.endOfSupportDate,
+    endOfServiceContractRenewal: r.EndOfServiceContractRenewal?.value || r.endOfServiceContractRenewal,
     lastDateOfSupport: r.LastDateOfSupport?.value || r.lastDateOfSupport,
   }));
 }
