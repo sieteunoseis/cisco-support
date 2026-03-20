@@ -74,10 +74,15 @@ module.exports = function (program) {
             ok(`${api}: accessible`);
           } catch (err) {
             const msg = err.message || String(err);
-            if (msg.includes("404") || msg.includes("not found")) {
+            const status = err.response?.status || err.status;
+            if (status === 404 || msg.includes("404") || msg.includes("not found") || msg.includes("No data found")) {
               ok(`${api}: accessible (test resource not found, but API responded)`);
-            } else if (msg.includes("403")) {
-              warn(`${api}: access denied — check API grant permissions`);
+            } else if (status === 403 || msg.includes("403") || msg.includes("Access denied") || msg.includes("access denied")) {
+              warn(`${api}: reachable but access denied on test query — permissions may be limited`);
+            } else if (status === 401 || msg.includes("401") || msg.includes("Unauthorized")) {
+              fail(`${api}: authentication failed — token may lack scope for this API`);
+            } else if (status >= 500) {
+              warn(`${api}: server error (${status}) — API may be temporarily unavailable`);
             } else {
               fail(`${api}: ${msg}`);
             }
