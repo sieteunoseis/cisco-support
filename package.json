@@ -1,6 +1,6 @@
 {
   "name": "cisco-support",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI for querying Cisco Support APIs — bugs, cases, EoX, PSIRT, product, software, serial, and RMA",
   "main": "cli/index.js",
   "bin": {
