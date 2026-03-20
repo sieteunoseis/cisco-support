@@ -3,13 +3,29 @@
   "version": "1.0.0",
   "description": "CLI for querying Cisco Support APIs — bugs, cases, EoX, PSIRT, product, software, serial, and RMA",
   "main": "cli/index.js",
-  "bin": { "cisco-support": "./bin/cisco-support.js" },
-  "keywords": ["cisco", "support", "bug", "psirt", "eox", "cli", "security", "advisory"],
+  "bin": {
+    "cisco-support": "./bin/cisco-support.js"
+  },
+  "keywords": [
+    "cisco",
+    "support",
+    "bug",
+    "psirt",
+    "eox",
+    "cli",
+    "security",
+    "advisory"
+  ],
   "author": "sieteunoseis (jeremy.worden@gmail.com)",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/sieteunoseis/cisco-support.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sieteunoseis/cisco-support.git"
+  },
   "funding": "https://buymeacoffee.com/automatebldrs",
-  "scripts": { "test": "node test/run.js" },
+  "scripts": {
+    "test": "node test/run.js"
+  },
   "dependencies": {
     "commander": "^12.1.0",
     "cli-table3": "^0.6.5",
