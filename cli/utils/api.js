@@ -1,4 +1,3 @@
-const axios = require("axios");
 const { getToken } = require("./auth.js");
 
 const API_BASE_URLS = {
@@ -17,44 +16,65 @@ const BACKOFF_MS = [1000, 2000, 4000];
 
 async function apiGet(apiName, path, params, config) {
   if (!API_BASE_URLS[apiName]) {
-    throw new Error(`Unknown API "${apiName}". Valid: ${Object.keys(API_BASE_URLS).join(", ")}`);
+    throw new Error(
+      `Unknown API "${apiName}". Valid: ${Object.keys(API_BASE_URLS).join(", ")}`,
+    );
   }
 
   if (config.enabledApis && !config.enabledApis.includes(apiName)) {
-    throw new Error(`API "${apiName}" is not enabled. Update your config to enable it.`);
+    throw new Error(
+      `API "${apiName}" is not enabled. Update your config to enable it.`,
+    );
   }
 
   const token = await getToken(config);
-  const url = `${API_BASE_URLS[apiName]}${path}`;
+  const base = `${API_BASE_URLS[apiName]}${path}`;
+  const qs = params ? new URLSearchParams(params).toString() : "";
+  const url = qs ? `${base}?${qs}` : base;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-        params,
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
       });
-      return response.data;
+
+      if (!response.ok) {
+        const status = response.status;
+
+        if (status === 429 && attempt < MAX_RETRIES) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, BACKOFF_MS[attempt]),
+          );
+          continue;
+        }
+
+        if (status === 401) {
+          throw new Error(
+            "Authentication failed. Your token may be expired or credentials invalid.",
+          );
+        }
+        if (status === 403) {
+          throw new Error(
+            `Access denied for API "${apiName}". Check your API grant permissions.`,
+          );
+        }
+        if (status === 404) {
+          throw new Error(`Resource not found: ${apiName}${path}`);
+        }
+        if (status === 429) {
+          throw new Error("Rate limit exceeded. Try again later.");
+        }
+
+        const body = await response.text();
+        throw new Error(`HTTP ${status}: ${body}`);
+      }
+
+      return await response.json();
     } catch (err) {
-      const status = err.response?.status;
-
-      if (status === 429 && attempt < MAX_RETRIES) {
-        await new Promise((resolve) => setTimeout(resolve, BACKOFF_MS[attempt]));
-        continue;
-      }
-
-      if (status === 401) {
-        throw new Error("Authentication failed. Your token may be expired or credentials invalid.");
-      }
-      if (status === 403) {
-        throw new Error(`Access denied for API "${apiName}". Check your API grant permissions.`);
-      }
-      if (status === 404) {
-        throw new Error(`Resource not found: ${apiName}${path}`);
-      }
-      if (status === 429) {
-        throw new Error("Rate limit exceeded. Try again later.");
-      }
-
+      if (attempt < MAX_RETRIES && err.message?.includes("429")) continue;
       throw err;
     }
   }

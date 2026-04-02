@@ -1,7 +1,10 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const axios = require("axios");
-const { getConfigDir, hasSsPlaceholders, resolveSsPlaceholders } = require("./config.js");
+const {
+  getConfigDir,
+  hasSsPlaceholders,
+  resolveSsPlaceholders,
+} = require("./config.js");
 
 const TOKEN_ENDPOINT = "https://id.cisco.com/oauth2/default/v1/token";
 
@@ -15,11 +18,18 @@ async function fetchToken(clientId, clientSecret) {
   params.append("client_id", clientId);
   params.append("client_secret", clientSecret);
 
-  const response = await axios.post(TOKEN_ENDPOINT, params.toString(), {
+  const response = await fetch(TOKEN_ENDPOINT, {
+    method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
   });
 
-  return { access_token: response.data.access_token, expires_in: response.data.expires_in };
+  if (!response.ok) {
+    throw new Error(`Token request failed: HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { access_token: data.access_token, expires_in: data.expires_in };
 }
 
 function cacheToken(tokenData) {
@@ -31,7 +41,9 @@ function cacheToken(tokenData) {
     ...tokenData,
     expiresAt: Date.now() + tokenData.expires_in * 1000,
   };
-  fs.writeFileSync(getTokenCachePath(), JSON.stringify(cached, null, 2), { mode: 0o600 });
+  fs.writeFileSync(getTokenCachePath(), JSON.stringify(cached, null, 2), {
+    mode: 0o600,
+  });
   return cached;
 }
 
@@ -63,7 +75,9 @@ async function getToken(config) {
   }
 
   if (!clientId || !clientSecret) {
-    throw new Error('No API credentials configured. Run "cisco-support config set" to configure.');
+    throw new Error(
+      'No API credentials configured. Run "cisco-support config set" to configure.',
+    );
   }
 
   const tokenData = await fetchToken(clientId, clientSecret);
@@ -71,4 +85,11 @@ async function getToken(config) {
   return tokenData.access_token;
 }
 
-module.exports = { fetchToken, getTokenCachePath, cacheToken, loadCachedToken, isTokenValid, getToken };
+module.exports = {
+  fetchToken,
+  getTokenCachePath,
+  cacheToken,
+  loadCachedToken,
+  isTokenValid,
+  getToken,
+};
